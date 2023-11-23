@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, MutableRefObject } from "react";
-import { buildDisplayElement, startInspection } from "@/app/lib/utils"
+import { buildDisplayElement, startInspectionTimer, startSolveTimer } from "@/app/lib/utils"
 
 
 const BLACK = "text-black";
@@ -35,21 +35,29 @@ export default function Timer() {
       // ' ' (space bar) events
       if (event.key === ' ') {
         switch (status.current) {
-          case "IDLE":
+          case IDLE:
             setDisplayColor(GREEN);
             setStatus(STARTING);
             break;
-          case "STARTING":
+          case STARTING:
             break;
-          case "INSPECTION":
+          case INSPECTION:
             setDisplayColor(YELLOW);
             let intervalId = setInterval(() => {
+              clearInterval(intervalId);
               setDisplayColor(GREEN);
               setStatus(READY);
             }, readyTime.current);
             readyTimeInterval.current = intervalId;
             break;
-          case "READY":
+          case READY:
+            break;
+          case SOLVING:
+            clearInterval(solveInterval.current);
+            setDisplayColor(RED);
+            setStatus(FINISHED);
+            break;
+          case FINISHED:
             break;
         }
       }
@@ -60,27 +68,37 @@ export default function Timer() {
       // ' ' (space bar) events
       if (event.key === ' ') {
         switch (status.current) {
-          case "IDLE":
+          case IDLE:
             break;
-          case "STARTING":
+          case STARTING:
             setDisplayColor(RED);
-            let intervalId = startInspection(setDisplay);
-            inspectionInterval.current = intervalId;
+            let inspectionIntervalId = startInspectionTimer(setDisplay, status.current);
+            inspectionInterval.current = inspectionIntervalId;
             setStatus(INSPECTION);
             break;
-          case "INSPECTION":
+          case INSPECTION:
             clearInterval(readyTimeInterval.current);
+            setDisplayColor(RED);
             break;
-          case "READY":
+          case READY:
+            clearInterval(inspectionInterval.current);
             setDisplayColor(BLACK);
-            
+            let solveIntervalId = startSolveTimer(setDisplay);
+            solveInterval.current = solveIntervalId;
+            setStatus(SOLVING);
+          case SOLVING:
+            break;
+          case FINISHED:
+            setDisplayColor(BLACK);
+            setStatus(IDLE);
+            break;
         }
       }
     });
   }, [])
 
   return (
-    <div className="flex justify-center">
+    <div id="timer-display" className="flex justify-center">
       <p className={`text-9xl ${displayColor}`}>{buildDisplayElement(display)}</p>
     </div>
   );
