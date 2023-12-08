@@ -3,12 +3,6 @@
 @tailwind utilities;
 
 
-.solve-time:hover {
-  color: rgb(32, 155, 204);
-  text-decoration: underline;
-  cursor: pointer;
-}
-
 #timer {
   font-size: 300px;
 }
