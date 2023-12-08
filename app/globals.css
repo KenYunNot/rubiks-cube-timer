@@ -1,3 +1,52 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+.solve-time:hover {
+  color: rgb(32, 155, 204);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+#timer {
+  font-size: 300px;
+}
+
+#timer>#centisecond {
+  font-size: 200px;
+}
+
+#garbage-button:hover #garbage-svg {
+  display: none;
+}
+
+#garbage-button:hover #garbage-svg-red {
+  display: block;
+}
+
+th, td {
+  border: 1px solid lightslategray;
+}
+
+button {
+  width: fit-content;
+  margin: 0px 4px;
+  padding: 1px 6px;
+  font-weight: 700;
+  border: 1px solid;
+  border-radius: 5px;
+}
+
+
+
+.hide-on-starting {
+  visibility: visible;
+  opacity: 1;
+}
+
+.fadeout {
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0.1s, opacity 0.1s linear;
+}
