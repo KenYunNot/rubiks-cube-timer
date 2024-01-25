@@ -1,121 +1,107 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Timer from "./ui/timer"
-import Scramble from "./ui/scramble";
-import Solves from "./ui/solves";
-import { 
-  generateScramble,
-} from "./lib/utils";
-import { 
-  IDLE,
-  STARTING,
-  INSPECTION,
-  WAITING,
-  READY,
-  SOLVING,
-  FINISHED,
-  INTERRUPTED,
-  PREV,
-  CURR
-} from "./lib/definitions";
-import { StatusContext } from "./context/statusContext";
-import { ScramblesContext, ScramblePointerContext } from "./context/scrambleContext";
-import { SolvesContext } from "@/app/context/solvesContext";
+import { Status, Settings } from "@/app/lib/definitions";
+import Timer from "@/app/ui/timer";
+import { StatusContext, SettingsContext  } from "@/app/contexts";
 
-export default function Page() {
-  const [_status, _setStatus] = useState<string>(IDLE); // Dummy status to rerender the page
-  const [scrambles, setScrambles] = useState<string[]>(["", ""]);
-  const [scramblePointer, setScramblePointer] = useState<number>(PREV);
-  const [solves, setSolves] = useState<any[]>([]);
-  const [fadeout, setFadeout] = useState<boolean>(false);
+export default function Home() {
+  const [status, setStatus] = useState<Status>("idle");
+  const [settings, setSettings] = useState<Settings>({
+    readyTime: 300,
+    scrambleSize: 15,
+    useInspection: true,
+  });
 
-  const status = useRef<string>(IDLE); // Current status of the timer (must be a ref so event listener is functional)
-  const setStatus = (s: string) => {_setStatus(s); status.current = s;} // Mutate function that changes dummy state and status ref
+  const interval = useRef<NodeJS.Timeout>();
+  const intervalFn = () => {
+    setStatus("ready");
+    clearInterval(interval.current);
+  }
 
-  const readyInterval = useRef<NodeJS.Timeout>();
-  const readyTime = useRef<number>(300);
+  function handleKeyDown(e: any) {
+    // Ignore events that are not space and those that repeat
+    if (e.key !== ' ' || e.repeat) return;
+    if (!settings.useInspection) {
+      switch (status) {
+        case "idle":
+          setStatus("waiting");
+          interval.current = setInterval(intervalFn, settings.readyTime);
+          break;
+        case "solving":
+          setStatus("finished");
+          break;
+      }
+    } else {
+      switch (status) {
+        case "idle":
+          setStatus("starting");
+          break;
+        case "inspection":
+          setStatus("waiting");
+          interval.current = setInterval(intervalFn, settings.readyTime);
+          break;
+        case "solving":
+          setStatus("finished");
+          break;
+      }
+    }
+    console.log(status);
+  }
 
+  function handleKeyUp(e: any) {
+    // Ignore events that are not space and those that repeat
+    if (e.key !== ' ' || e.repeat) return;
+    if (!settings.useInspection) {
+      switch (status) {
+        case "waiting":
+          setStatus("idle");
+          clearInterval(interval.current);
+          break;
+        case "ready":
+          setStatus("solving");
+          break;
+        case "finished":
+          setStatus("idle");
+          break;
+      }
+    } else {
+      switch (status) {
+        case "starting":
+          setStatus("inspection");
+          break;
+        case "waiting":
+          setStatus("inspection");
+          clearInterval(interval.current);
+          break;
+        case "ready":
+          setStatus("solving");
+          break;
+        case "finished":
+          setStatus("idle");
+          break;
+      }
+    }
+    console.log(status);
+  }
 
-  /* On page load useEffect */
   useEffect(() => {
-    // Event listeners
-    // keydown event
-    addEventListener("keydown", (event) => {
-      if (event.repeat) return;
-      if (event.key === ' ') {
-        switch (status.current) {
-          case IDLE:
-            setStatus(STARTING);
-            setFadeout(true);
-            break;
-          case INSPECTION:
-            setStatus(WAITING);
-            let intervalId = setInterval(() => {
-              clearInterval(intervalId);
-              setStatus(READY);
-            }, readyTime.current);
-            readyInterval.current = intervalId;
-            break;
-          case SOLVING:
-            setStatus(FINISHED);
-            setFadeout(false);
-            break;
-          default:
-            console.log(`Invalid keydown event ${status.current}`);
-            break;
-        }
-      } else if (event.key === 'Escape') {
-        setStatus(INTERRUPTED);
-        clearInterval(readyInterval.current);
-        setFadeout(false);
-      }
-    });
-    
-    // keyup event
-    addEventListener("keyup", (event) => {
-      if (event.repeat) return;
-      if (event.key === ' ') {
-        switch (status.current) {
-          case STARTING:
-            setStatus(INSPECTION);
-            break;
-          case WAITING:
-            clearInterval(readyInterval.current);
-            setStatus(INSPECTION);
-            break;
-          case READY:
-            setStatus(SOLVING);
-            break;
-          case FINISHED:
-            setStatus(IDLE);
-            break;
-          default:
-            console.log(`Invalid keyup event ${status.current}`);
-            break;
-        } 
-      } else if (event.key === 'Escape') {
-        setStatus(IDLE);
-      }
-    });
-  }, []);
+    addEventListener("keydown", handleKeyDown);
+    addEventListener("keyup", handleKeyUp);
 
+    return () => {
+      removeEventListener("keydown", handleKeyDown);
+      removeEventListener("keyup", handleKeyUp)
+    }
+  }, [status])
 
   return (
-    <StatusContext.Provider value={{status: status.current, setStatus}}>
-      <ScramblesContext.Provider value={{scrambles, setScrambles}}>
-        <ScramblePointerContext.Provider value={{scramblePointer, setScramblePointer}}>
-          <SolvesContext.Provider value={{solves, setSolves}}>
-            <div className="h-screen flex">
-              <Solves fadeout={fadeout} />
-              <div className="w-full flex flex-col items-center">
-                <Scramble fadeout={fadeout} />
-                <Timer />
-              </div>
-            </div>
-          </SolvesContext.Provider>
-        </ScramblePointerContext.Provider>
-      </ScramblesContext.Provider>
-    </StatusContext.Provider>
+    <div className="w-full h-full">
+      <StatusContext.Provider value={status}>
+        <SettingsContext.Provider value={settings}>
+          <Timer />
+        </SettingsContext.Provider>
+      </StatusContext.Provider>
+    </div>
   )
 }
