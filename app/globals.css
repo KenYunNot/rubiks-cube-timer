@@ -1,11 +1,3 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-.display-font {
-  font-size: 375px;
-}
-
-.display-font .centisecond {
-  font-size: 300px;
-}

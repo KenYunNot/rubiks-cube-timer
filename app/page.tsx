@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef } from "react";
 import { Status, Settings } from "@/app/lib/definitions";
 import Timer from "@/app/ui/timer";
-import { StatusContext, SettingsContext  } from "@/app/contexts";
+import { StatusContext, SettingsContext } from "@/app/lib/contexts";
 
 export default function Home() {
+  const [scramble, setScramble] = useState<string>();
   const [status, setStatus] = useState<Status>("idle");
   const [settings, setSettings] = useState<Settings>({
     readyTime: 300,
@@ -20,7 +21,11 @@ export default function Home() {
   }
 
   function handleKeyDown(e: any) {
-    // Ignore events that are not space and those that repeat
+    // Handle 'Escape' events separately
+    if (e.key === 'Escape') {
+      setStatus("idle");
+    }
+    // Ignore events that are not space (except Escape) and those that repeat
     if (e.key !== ' ' || e.repeat) return;
     if (!settings.useInspection) {
       switch (status) {
@@ -46,7 +51,6 @@ export default function Home() {
           break;
       }
     }
-    console.log(status);
   }
 
   function handleKeyUp(e: any) {
@@ -82,7 +86,6 @@ export default function Home() {
           break;
       }
     }
-    console.log(status);
   }
 
   useEffect(() => {
@@ -97,11 +100,7 @@ export default function Home() {
 
   return (
     <div className="w-full h-full">
-      <StatusContext.Provider value={status}>
-        <SettingsContext.Provider value={settings}>
-          <Timer />
-        </SettingsContext.Provider>
-      </StatusContext.Provider>
+      <Timer status={status} settings={settings} />
     </div>
   )
 }
