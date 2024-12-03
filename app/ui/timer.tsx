@@ -114,7 +114,7 @@ export default function Timer({
           break;
         case "ready":
           setStatus("solving");
-          clearInterval(inspectionInterval.current);
+          clearInterval(inspectionInterval.current);  
           const startTime = Date.now();
           solvingInterval.current = setInterval(() => {
             const currentTime = Date.now();
@@ -162,26 +162,30 @@ export default function Timer({
   }, [status])
 
   return (
-    <div className="flex flex-col justify-center items-center w-full h-full">
-      <div className={clsx("text-[375px]", {
-        "text-black" : status === "idle" || status === "solving",
-        "text-red-500" : status === "inspection" || status === "finished" || (status === "waiting" && !settings.useInspection),
-        "text-yellow-400" : status === "waiting" && settings.useInspection,
-        "text-green-400" : status === "starting" || status === "ready",
-      })}>
+    <div className={clsx("flex justify-center items-center w-full h-full text-[375px]", {
+      "text-black" : status === "idle" || status === "solving",
+      "text-red-500" : status === "inspection" || status === "finished" || (status === "waiting" && !settings.useInspection),
+      "text-yellow-400" : status === "waiting" && settings.useInspection,
+      "text-green-400" : status === "starting" || status === "ready",
+    })}>
+      <div className="flex items-end align-baseline">
         {display.map((displayPart, index) => {
           if (index === 0) {
             return (
-              <span key={index}>{displayPart}</span>
-            );
-          }
-          if (index === display.length-1) {
-            return (
-              <span key={index} className="text-[300px]">.{displayPart}</span>
+              <div key={index} className="leading-none min-w-[275px]">
+                {displayPart}
+              </div>
             )
           }
+
           return (
-            <span key={index}>:{displayPart}</span>
+            <div key={index} className="leading-none w-[550px] last:w-[450px] last:text-[300px]">
+              {clsx({
+                ':' : index !== display.length-1,
+                '.' : index === display.length-1,
+              })}
+              {displayPart}
+            </div>
           )
         })}
       </div>
