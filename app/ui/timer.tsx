@@ -4,21 +4,19 @@ import React from "react";
 import clsx from "clsx";
 
 
-export default function Timer({
+const Timer = ({
   readyTime = 300,
-  scrambleSize = 15,
   inspection = true,
   onStart = () => {},
   onStop = () => {},
   onInterrupt = () => {},
 } : {
   readyTime?: number,
-  scrambleSize?: number,
   inspection?: boolean,
   onStart?: () => void,
   onStop?: () => void,
   onInterrupt?: () => void,
-}) {
+}) => {
   const [display, setDisplay] = React.useState<string[]>(["0", "00"]);
   const [status, setStatus] = React.useState<"idle" | "starting" | "inspection" | "waiting" | "ready" | "solving" | "finished">("idle");
   const inspectionInterval = React.useRef<NodeJS.Timeout>();
@@ -208,3 +206,6 @@ const generateDisplay = (startTime: number, endTime: number) => {
   }
   return display;
 }
+
+
+export default React.memo(Timer);
