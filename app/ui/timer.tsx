@@ -5,13 +5,19 @@ import clsx from "clsx";
 
 
 export default function Timer({
-  readyTime=300,
-  scrambleSize=15,
-  inspection=true,
+  readyTime = 300,
+  scrambleSize = 15,
+  inspection = true,
+  onStart = () => {},
+  onStop = () => {},
+  onInterrupt = () => {},
 } : {
   readyTime?: number,
   scrambleSize?: number,
   inspection?: boolean,
+  onStart?: () => void,
+  onStop?: () => void,
+  onInterrupt?: () => void,
 }) {
   const [display, setDisplay] = React.useState<string[]>(["0", "00"]);
   const [status, setStatus] = React.useState<"idle" | "starting" | "inspection" | "waiting" | "ready" | "solving" | "finished">("idle");
@@ -25,16 +31,21 @@ export default function Timer({
   }
 
   const handleKeyDown = (e: any) => {
-    // Handle 'Escape' events separately
+    // Skip repeat keyboard events
+    if (e.repeat) return;
+    // 'Escape' key
     if (e.key === 'Escape') {
       setStatus("idle");
+      onInterrupt();
+      return;
     }
-    // Ignore events that are not space (except Escape) and those that repeat
-    if (e.key !== ' ' || e.repeat) return;
+    // 'Space' key
+    if (e.key !== ' ') return;
     if (inspection) {
       switch (status) {
         case "idle":
           setStatus("starting");
+          onStart();
           break;
         case "inspection":
           setStatus("waiting");
@@ -42,6 +53,7 @@ export default function Timer({
           break;
         case "solving":
           setStatus("finished");
+          onStop();
           break;
       }
     } else {
@@ -58,8 +70,10 @@ export default function Timer({
   }
 
   const handleKeyUp = (e: any) => {
-    // Ignore events that are not space and those that repeat
-    if (e.key !== ' ' || e.repeat) return;
+    // Skip repeat keyboard events
+    if (e.repeat) return;
+    // 'Space' key
+    if (e.key !== ' ') return;
     if (inspection) {
       switch (status) {
         case "starting":
