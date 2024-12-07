@@ -2,50 +2,19 @@
 
 import React from "react";
 import clsx from "clsx";
-import type { Status, Settings } from "@/app/lib/definitions";
 
-type TimerProps = {
-  settings: Settings;
-}
-
-
-const generateDisplay = (startTime: number, endTime: number) => {
-  const DAY_MS = 86400000;
-  const HOUR_MS = 3600000;
-  const MINUTE_MS = 60000;
-  const SECOND_MS = 1000;
-  const CENTISECOND_MS = 10;
-
-  let parts = [];
-  let diff = endTime - startTime;
-  if (diff > DAY_MS) {
-    parts.push(Math.trunc(diff / DAY_MS));
-  }
-  if (diff > HOUR_MS) {
-    parts.push(Math.trunc((diff % DAY_MS) / HOUR_MS));
-  }
-  if (diff > MINUTE_MS) {
-    parts.push(Math.trunc((diff % HOUR_MS) / MINUTE_MS));
-  }
-  parts.push(Math.trunc((diff % MINUTE_MS) / SECOND_MS));
-  parts.push(Math.trunc((diff % SECOND_MS) / CENTISECOND_MS));
-
-  let display = [];
-  for (let i = 0; i < parts.length; i++) {
-    if (i === 0) {
-      display.push(String(parts[i]));
-    } else {
-      display.push(String(parts[i]).padStart(2, '0'));
-    }
-  }
-  return display;
-}
 
 export default function Timer({
-  settings,
-} : TimerProps) {
+  readyTime=300,
+  scrambleSize=15,
+  inspection=true,
+} : {
+  readyTime?: number,
+  scrambleSize?: number,
+  inspection?: boolean,
+}) {
   const [display, setDisplay] = React.useState<string[]>(["0", "00"]);
-  const [status, setStatus] = React.useState<Status>("idle");
+  const [status, setStatus] = React.useState<"idle" | "starting" | "inspection" | "waiting" | "ready" | "solving" | "finished">("idle");
   const inspectionInterval = React.useRef<NodeJS.Timeout>();
   const solvingInterval = React.useRef<NodeJS.Timeout>();
 
@@ -62,14 +31,14 @@ export default function Timer({
     }
     // Ignore events that are not space (except Escape) and those that repeat
     if (e.key !== ' ' || e.repeat) return;
-    if (settings.useInspection) {
+    if (inspection) {
       switch (status) {
         case "idle":
           setStatus("starting");
           break;
         case "inspection":
           setStatus("waiting");
-          waitingInterval.current = setInterval(intervalFn, settings.readyTime);
+          waitingInterval.current = setInterval(intervalFn, readyTime);
           break;
         case "solving":
           setStatus("finished");
@@ -79,7 +48,7 @@ export default function Timer({
       switch (status) {
         case "idle":
           setStatus("waiting");
-          waitingInterval.current = setInterval(intervalFn, settings.readyTime);
+          waitingInterval.current = setInterval(intervalFn, readyTime);
           break;
         case "solving":
           setStatus("finished");
@@ -91,7 +60,7 @@ export default function Timer({
   const handleKeyUp = (e: any) => {
     // Ignore events that are not space and those that repeat
     if (e.key !== ' ' || e.repeat) return;
-    if (settings.useInspection) {
+    if (inspection) {
       switch (status) {
         case "starting":
           setStatus("inspection");
@@ -164,8 +133,8 @@ export default function Timer({
   return (
     <div className={clsx("flex justify-center items-center w-full h-full text-[375px]", {
       "text-black" : status === "idle" || status === "solving",
-      "text-red-500" : status === "inspection" || status === "finished" || (status === "waiting" && !settings.useInspection),
-      "text-yellow-400" : status === "waiting" && settings.useInspection,
+      "text-red-500" : status === "inspection" || status === "finished",
+      "text-yellow-400" : status === "waiting",
       "text-green-400" : status === "starting" || status === "ready",
     })}>
       <div className="flex items-end align-baseline">
@@ -191,4 +160,37 @@ export default function Timer({
       </div>
     </div>
   )
+}
+
+
+const generateDisplay = (startTime: number, endTime: number) => {
+  const DAY_MS = 86400000;
+  const HOUR_MS = 3600000;
+  const MINUTE_MS = 60000;
+  const SECOND_MS = 1000;
+  const CENTISECOND_MS = 10;
+
+  let parts = [];
+  let diff = endTime - startTime;
+  if (diff > DAY_MS) {
+    parts.push(Math.trunc(diff / DAY_MS));
+  }
+  if (diff > HOUR_MS) {
+    parts.push(Math.trunc((diff % DAY_MS) / HOUR_MS));
+  }
+  if (diff > MINUTE_MS) {
+    parts.push(Math.trunc((diff % HOUR_MS) / MINUTE_MS));
+  }
+  parts.push(Math.trunc((diff % MINUTE_MS) / SECOND_MS));
+  parts.push(Math.trunc((diff % SECOND_MS) / CENTISECOND_MS));
+
+  let display = [];
+  for (let i = 0; i < parts.length; i++) {
+    if (i === 0) {
+      display.push(String(parts[i]));
+    } else {
+      display.push(String(parts[i]).padStart(2, '0'));
+    }
+  }
+  return display;
 }
