@@ -1,16 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import Scramble from "@/app/ui/scramble";
 import Timer from "@/app/ui/timer";
 
+
+type Settings = {
+  readyTime: number;
+  inspection: boolean;
+  scrambleSize: number,
+}
+
 export default function Home() {
-  const [scramble, setScramble] = useState<string>();
+  const [settings, setSettings] = useState<Settings>({
+    readyTime: 300,
+    inspection: true,
+    scrambleSize: 15,
+  })
 
   return (
-    <div className="flex flex-col w-full h-full">
-      <Scramble />
-      <Timer />
+    <div className="w-full h-full">
+      <Timer 
+        readyTime={settings.readyTime} 
+        inspection={settings.inspection}
+        scrambleSize={settings.scrambleSize}
+      />
     </div>
   )
 }
