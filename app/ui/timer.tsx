@@ -1,23 +1,26 @@
 "use client";
 
 import React from "react";
-import clsx from "clsx";
+import Scramble from "./scramble";
+import { cn } from '@/app/lib/utils';
 
 
 const Timer = ({
-  readyTime = 300,
-  inspection = true,
+  readyTime,
+  inspection,
+  scrambleSize,
   onStart = () => {},
   onStop = () => {},
   onInterrupt = () => {},
 } : {
-  readyTime?: number,
-  inspection?: boolean,
+  readyTime: number,
+  inspection: boolean,
+  scrambleSize: number,
   onStart?: () => void,
   onStop?: () => void,
   onInterrupt?: () => void,
 }) => {
-  const [display, setDisplay] = React.useState<string[]>(["0", "00"]);
+  const [displayParts, setDisplayParts] = React.useState<string[]>(["0", "00"]);
   const [status, setStatus] = React.useState<"idle" | "starting" | "inspection" | "waiting" | "ready" | "solving" | "finished">("idle");
   const inspectionInterval = React.useRef<NodeJS.Timeout>();
   const solvingInterval = React.useRef<NodeJS.Timeout>();
@@ -77,15 +80,15 @@ const Timer = ({
         case "starting":
           setStatus("inspection");
           let time = 15;
-          setDisplay([String(time)]);
+          setDisplayParts([String(time)]);
           inspectionInterval.current = setInterval(() => {
             time -= 1;
             if (time <= -2) {
-              setDisplay(["DNF"]);
+              setDisplayParts(["DNF"]);
             } else if (time <= 0) {
-              setDisplay(["+2"]);
+              setDisplayParts(["+2"]);
             } else {
-              setDisplay([String(time)]);
+              setDisplayParts([String(time)]);
             }
           }, 1000);
           break;
@@ -99,8 +102,8 @@ const Timer = ({
           const startTime = Date.now();
           solvingInterval.current = setInterval(() => {
             const currentTime = Date.now();
-            const newDisplay = generateDisplay(startTime, currentTime);
-            setDisplay(newDisplay);
+            const newDisplayParts = generateDisplayParts(startTime, currentTime);
+            setDisplayParts(newDisplayParts);
           }, 10);
           break;
         case "finished":
@@ -120,8 +123,8 @@ const Timer = ({
           const startTime = Date.now();
           solvingInterval.current = setInterval(() => {
             const currentTime = Date.now();
-            const newDisplay = generateDisplay(startTime, currentTime);
-            setDisplay(newDisplay);
+            const newDisplay = generateDisplayParts(startTime, currentTime);
+            setDisplayParts(newDisplay);
           }, 10);
           break;
         case "finished":
@@ -143,39 +146,42 @@ const Timer = ({
   }, [status])
 
   return (
-    <div className={clsx("flex justify-center items-center w-full h-full text-[375px]", {
-      "text-black" : status === "idle" || status === "solving",
-      "text-red-500" : status === "inspection" || status === "finished",
-      "text-yellow-400" : status === "waiting",
-      "text-green-400" : status === "starting" || status === "ready",
-    })}>
-      <div className="flex items-end align-baseline">
-        {display.map((displayPart, index) => {
-          if (index === 0) {
+    <div className="flex flex-col w-full h-full">
+      <Scramble scrambleSize={scrambleSize} />
+      <div className={cn("flex justify-center items-center h-full", {
+        "text-black" : status === "idle" || status === "solving",
+        "text-red-500" : status === "inspection" || status === "finished",
+        "text-yellow-400" : status === "waiting",
+        "text-green-400" : status === "starting" || status === "ready",
+      })}>
+        <div className="flex items-end h-fit align-baseline text-[375px]">
+          {displayParts.map((displayPart, index) => {
+            if (index === 0) {
+              return (
+                <div key={index} className="leading-none min-w-[275px]">
+                  {displayPart}
+                </div>
+              )
+            }
+
             return (
-              <div key={index} className="leading-none min-w-[275px]">
+              <div key={index} className="leading-none w-[550px] last:w-[450px] last:text-[300px]">
+                {cn({
+                  ':' : index !== displayParts.length-1,
+                  '.' : index === displayParts.length-1,
+                })}
                 {displayPart}
               </div>
             )
-          }
-
-          return (
-            <div key={index} className="leading-none w-[550px] last:w-[450px] last:text-[300px]">
-              {clsx({
-                ':' : index !== display.length-1,
-                '.' : index === display.length-1,
-              })}
-              {displayPart}
-            </div>
-          )
-        })}
+          })}
+        </div>
       </div>
     </div>
   )
 }
 
 
-const generateDisplay = (startTime: number, endTime: number) => {
+const generateDisplayParts = (startTime: number, endTime: number) => {
   const DAY_MS = 86400000;
   const HOUR_MS = 3600000;
   const MINUTE_MS = 60000;
