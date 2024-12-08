@@ -31,12 +31,20 @@ const Timer = ({
     clearInterval(waitingInterval.current);
   }
 
+  const resetTimer = () => {
+    clearInterval(inspectionInterval.current);
+    clearInterval(waitingInterval.current);
+    clearInterval(solvingInterval.current);
+    setDisplayParts(["0", "00"]);
+  }
+
   const handleKeyDown = (e: any) => {
     // Skip repeat keyboard events
     if (e.repeat) return;
     // 'Escape' key
     if (e.key === 'Escape') {
       setStatus("idle");
+      resetTimer();
       onInterrupt();
       return;
     }
@@ -54,6 +62,7 @@ const Timer = ({
           break;
         case "solving":
           setStatus("finished");
+          clearInterval(solvingInterval.current);
           onStop();
           break;
       }
@@ -62,9 +71,12 @@ const Timer = ({
         case "idle":
           setStatus("waiting");
           waitingInterval.current = setInterval(intervalFn, readyTime);
+          onStart();
           break;
         case "solving":
           setStatus("finished");
+          clearInterval(solvingInterval.current);
+          onStop();
           break;
       }
     }
@@ -108,7 +120,6 @@ const Timer = ({
           break;
         case "finished":
           setStatus("idle");
-          clearInterval(solvingInterval.current);
           break;
       }
     } else {
