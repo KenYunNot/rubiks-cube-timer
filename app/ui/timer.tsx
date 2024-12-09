@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import Scramble from "./scramble";
-import { cn } from '@/app/lib/utils';
+import { cn, generateDisplayParts, generateScramble } from '@/app/lib/utils';
 
 
 const Timer = ({
@@ -22,6 +21,8 @@ const Timer = ({
 }) => {
   const [displayParts, setDisplayParts] = React.useState<string[]>(["0", "00"]);
   const [status, setStatus] = React.useState<"idle" | "starting" | "inspection" | "waiting" | "ready" | "solving" | "finished">("idle");
+  const [scrambleList, setScrambleList] = React.useState([generateScramble(scrambleSize), ""]);
+  const [isPrevScramble, setIsPrevScramble] = React.useState(false);
   const inspectionInterval = React.useRef<NodeJS.Timeout>();
   const solvingInterval = React.useRef<NodeJS.Timeout>();
   const waitingInterval = React.useRef<NodeJS.Timeout>();
@@ -159,8 +160,31 @@ const Timer = ({
 
   return (
     <div className="flex flex-col w-full h-full">
-      <Scramble scrambleSize={scrambleSize} />
-      <div className={cn("flex justify-center items-center h-full", {
+      <div id="scramble-div" className="flex flex-col justify-center items-center gap-3 w-full p-5">
+        <div className='flex gap-3 h-fit'>
+          <button 
+            className={cn('px-3 py-1 bg-blue-400 font-semibold rounded-full hover:bg-blue-500', {
+              'disabled pointer-events-none bg-gray-300' : isPrevScramble,
+            })}
+            onClick={() => setIsPrevScramble(true)}
+          >
+            prev
+          </button>
+          <button 
+            className='px-3 py-1 bg-blue-400 font-semibold rounded-full hover:bg-blue-500'
+            onClick={() => {
+              if (isPrevScramble)
+                setIsPrevScramble(false)
+              else
+                setScrambleList(prevList => [generateScramble(scrambleSize), prevList[0]])
+            }}
+          >
+            next
+          </button>
+        </div>
+        <span className='text-5xl'>{scrambleList[+ isPrevScramble]}</span>
+      </div>
+      <div id="timer-div" className={cn("flex justify-center items-center h-full", {
         "text-black" : status === "idle" || status === "solving",
         "text-red-500" : status === "inspection" || status === "finished",
         "text-yellow-400" : status === "waiting",
@@ -190,39 +214,6 @@ const Timer = ({
       </div>
     </div>
   )
-}
-
-
-const generateDisplayParts = (startTime: number, endTime: number) => {
-  const DAY_MS = 86400000;
-  const HOUR_MS = 3600000;
-  const MINUTE_MS = 60000;
-  const SECOND_MS = 1000;
-  const CENTISECOND_MS = 10;
-
-  let parts = [];
-  let diff = endTime - startTime;
-  if (diff > DAY_MS) {
-    parts.push(Math.trunc(diff / DAY_MS));
-  }
-  if (diff > HOUR_MS) {
-    parts.push(Math.trunc((diff % DAY_MS) / HOUR_MS));
-  }
-  if (diff > MINUTE_MS) {
-    parts.push(Math.trunc((diff % HOUR_MS) / MINUTE_MS));
-  }
-  parts.push(Math.trunc((diff % MINUTE_MS) / SECOND_MS));
-  parts.push(Math.trunc((diff % SECOND_MS) / CENTISECOND_MS));
-
-  let display = [];
-  for (let i = 0; i < parts.length; i++) {
-    if (i === 0) {
-      display.push(String(parts[i]));
-    } else {
-      display.push(String(parts[i]).padStart(2, '0'));
-    }
-  }
-  return display;
 }
 
 
