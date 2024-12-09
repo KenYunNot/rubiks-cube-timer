@@ -24,12 +24,7 @@ const Timer = ({
   const [status, setStatus] = React.useState<"idle" | "starting" | "inspection" | "waiting" | "ready" | "solving" | "finished">("idle");
   const inspectionInterval = React.useRef<NodeJS.Timeout>();
   const solvingInterval = React.useRef<NodeJS.Timeout>();
-
   const waitingInterval = React.useRef<NodeJS.Timeout>();
-  const intervalFn = () => {
-    setStatus("ready");
-    clearInterval(waitingInterval.current);
-  }
 
   const resetTimer = () => {
     clearInterval(inspectionInterval.current);
@@ -58,7 +53,10 @@ const Timer = ({
           break;
         case "inspection":
           setStatus("waiting");
-          waitingInterval.current = setInterval(intervalFn, readyTime);
+          waitingInterval.current = setInterval(() => {
+            setStatus("ready");
+            clearInterval(waitingInterval.current);
+          }, readyTime);
           break;
         case "solving":
           setStatus("finished");
@@ -70,7 +68,10 @@ const Timer = ({
       switch (status) {
         case "idle":
           setStatus("waiting");
-          waitingInterval.current = setInterval(intervalFn, readyTime);
+          waitingInterval.current = setInterval(() => {
+            setStatus("ready");
+            clearInterval(waitingInterval.current);
+          }, readyTime);
           onStart();
           break;
         case "solving":
