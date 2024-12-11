@@ -26,15 +26,7 @@ export const generateDisplayParts = (startTime: number, endTime: number) => {
   parts.push(Math.trunc((diff % MINUTE_MS) / SECOND_MS));
   parts.push(Math.trunc((diff % SECOND_MS) / CENTISECOND_MS));
 
-  let display = [];
-  for (let i = 0; i < parts.length; i++) {
-    if (i === 0) {
-      display.push(String(parts[i]));
-    } else {
-      display.push(String(parts[i]).padStart(2, '0'));
-    }
-  }
-  return display;
+  return parts;
 }
 
 export const generateScramble = (scrambleSize: number) => {

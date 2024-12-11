@@ -19,7 +19,7 @@ const Timer = ({
   onStop?: () => void,
   onInterrupt?: () => void,
 }) => {
-  const [displayParts, setDisplayParts] = React.useState<string[]>(["0", "00"]);
+  const [displayParts, setDisplayParts] = React.useState<string | number[]>([0, 0]);
   const [status, setStatus] = React.useState<"idle" | "starting" | "inspection" | "waiting" | "ready" | "solving" | "finished">("idle");
   const [scrambleList, setScrambleList] = React.useState([generateScramble(scrambleSize), ""]);
   const [isPrevScramble, setIsPrevScramble] = React.useState(false);
@@ -31,7 +31,7 @@ const Timer = ({
     clearInterval(inspectionInterval.current);
     clearInterval(waitingInterval.current);
     clearInterval(solvingInterval.current);
-    setDisplayParts(["0", "00"]);
+    setDisplayParts([0, 0]);
   }
 
   const handleKeyDown = (e: any) => {
@@ -92,17 +92,17 @@ const Timer = ({
     if (inspection) {
       switch (status) {
         case "starting":
-          setStatus("inspection");
           let time = 15;
-          setDisplayParts([String(time)]);
+          setStatus("inspection");
+          setDisplayParts(String(time));
           inspectionInterval.current = setInterval(() => {
             time -= 1;
             if (time <= -2) {
-              setDisplayParts(["DNF"]);
+              setDisplayParts("DNF");
             } else if (time <= 0) {
-              setDisplayParts(["+2"]);
+              setDisplayParts("+2");
             } else {
-              setDisplayParts([String(time)]);
+              setDisplayParts(String(time));
             }
           }, 1000);
           break;
@@ -191,25 +191,27 @@ const Timer = ({
         "text-green-400" : status === "starting" || status === "ready",
       })}>
         <div className="flex items-end h-fit align-baseline text-[375px]">
-          {displayParts.map((displayPart, index) => {
-            if (index === 0) {
+          {typeof displayParts === 'string' ? displayParts : 
+            displayParts.map((displayPart, index) => {
+              if (index === 0) {
+                return (
+                  <div key={index} className="leading-none min-w-[275px]">
+                    {displayPart}
+                  </div>
+                )
+              }
+
               return (
-                <div key={index} className="leading-none min-w-[275px]">
-                  {displayPart}
+                <div key={index} className="leading-none w-[550px] last:w-[450px] last:text-[300px]">
+                  {cn({
+                    ':' : index !== displayParts.length-1,
+                    '.' : index === displayParts.length-1,
+                  })}
+                  {String(displayPart).padStart(2, '0')}
                 </div>
               )
             }
-
-            return (
-              <div key={index} className="leading-none w-[550px] last:w-[450px] last:text-[300px]">
-                {cn({
-                  ':' : index !== displayParts.length-1,
-                  '.' : index === displayParts.length-1,
-                })}
-                {displayPart}
-              </div>
-            )
-          })}
+          )}
         </div>
       </div>
     </div>
