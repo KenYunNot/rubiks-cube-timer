@@ -27,20 +27,16 @@ const Timer = ({
   const solvingInterval = React.useRef<NodeJS.Timeout>();
   const waitingInterval = React.useRef<NodeJS.Timeout>();
 
-  const resetTimer = () => {
-    clearInterval(inspectionInterval.current);
-    clearInterval(waitingInterval.current);
-    clearInterval(solvingInterval.current);
-    setDisplayParts([0, 0]);
-  }
-
   const handleKeyDown = (e: any) => {
     // Skip repeat keyboard events
     if (e.repeat) return;
     // 'Escape' key
     if (e.key === 'Escape') {
       setStatus("idle");
-      resetTimer();
+      clearInterval(inspectionInterval.current);
+      clearInterval(waitingInterval.current);
+      clearInterval(solvingInterval.current);
+      setDisplayParts([0, 0]);
       onInterrupt();
       return;
     }
