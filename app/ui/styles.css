@@ -1,0 +1,11 @@
+th {
+  width: 33%;
+}
+
+td, .column-header {
+  text-align: center;
+}
+
+.row-header {
+  text-align: left;
+}
