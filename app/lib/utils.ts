@@ -5,30 +5,6 @@ export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
 }
 
-export const generateDisplayParts = (startTime: number, endTime: number) => {
-  const DAY_MS = 86400000;
-  const HOUR_MS = 3600000;
-  const MINUTE_MS = 60000;
-  const SECOND_MS = 1000;
-  const CENTISECOND_MS = 10;
-
-  let parts = [];
-  let diff = endTime - startTime;
-  if (diff > DAY_MS) {
-    parts.push(Math.trunc(diff / DAY_MS));
-  }
-  if (diff > HOUR_MS) {
-    parts.push(Math.trunc((diff % DAY_MS) / HOUR_MS));
-  }
-  if (diff > MINUTE_MS) {
-    parts.push(Math.trunc((diff % HOUR_MS) / MINUTE_MS));
-  }
-  parts.push(Math.trunc((diff % MINUTE_MS) / SECOND_MS));
-  parts.push(Math.trunc((diff % SECOND_MS) / CENTISECOND_MS));
-
-  return parts;
-}
-
 export const generateScramble = (scrambleSize: number) => {
   const faces = ['U', 'D', 'R', 'L', 'F', 'B'];
   const modifiers = ['', '2', '\''];
