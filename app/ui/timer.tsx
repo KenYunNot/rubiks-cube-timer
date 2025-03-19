@@ -1,28 +1,27 @@
 "use client";
 
 import React from "react";
-import { cn, generateDisplayParts, generateScramble } from '@/app/lib/utils';
+import { cn, generateScramble } from '@/app/lib/utils';
+import type { Solve } from "./solves";
 
 
 const Timer = ({
   readyTime,
   inspection,
   scrambleSize,
-  onStart = () => {},
   onStop = () => {},
-  onInterrupt = () => {},
 } : {
   readyTime: number,
   inspection: boolean,
   scrambleSize: number,
-  onStart?: () => void,
-  onStop?: () => void,
-  onInterrupt?: () => void,
+  onStop?: (solve: Solve) => void,
 }) => {
   const [displayParts, setDisplayParts] = React.useState<string | number[]>([0, 0]);
   const [status, setStatus] = React.useState<"idle" | "starting" | "inspection" | "waiting" | "ready" | "solving" | "finished">("idle");
   const [scrambleList, setScrambleList] = React.useState([generateScramble(scrambleSize), ""]);
   const [isPrevScramble, setIsPrevScramble] = React.useState(false);
+  const [dnf, setDnf] = React.useState(false);
+  const [plus2, setPlus2] = React.useState(false);
   const inspectionInterval = React.useRef<NodeJS.Timeout>();
   const solvingInterval = React.useRef<NodeJS.Timeout>();
   const waitingInterval = React.useRef<NodeJS.Timeout>();
@@ -37,7 +36,6 @@ const Timer = ({
       clearInterval(waitingInterval.current);
       clearInterval(solvingInterval.current);
       setDisplayParts([0, 0]);
-      onInterrupt();
       return;
     }
     // 'Space' key
@@ -46,7 +44,6 @@ const Timer = ({
       switch (status) {
         case "idle":
           setStatus("starting");
-          onStart();
           break;
         case "inspection":
           setStatus("waiting");
@@ -58,7 +55,13 @@ const Timer = ({
         case "solving":
           setStatus("finished");
           clearInterval(solvingInterval.current);
-          onStop();
+          onStop({
+            solveTime: displayParts as number[],
+            dnf,
+            plus2,
+            scramble: scrambleList[0],
+            date: new Date(),
+          });
           break;
       }
     } else {
@@ -69,12 +72,17 @@ const Timer = ({
             setStatus("ready");
             clearInterval(waitingInterval.current);
           }, readyTime);
-          onStart();
           break;
         case "solving":
           setStatus("finished");
           clearInterval(solvingInterval.current);
-          onStop();
+          onStop({
+            solveTime: displayParts as number[],
+            dnf,
+            plus2,
+            scramble: scrambleList[0],
+            date: new Date(),
+          });
           break;
       }
     }
@@ -143,6 +151,32 @@ const Timer = ({
       }
     }
   }
+
+
+  const generateDisplayParts = (startTime: number, endTime: number) => {
+    const DAY_MS = 86400000;
+    const HOUR_MS = 3600000;
+    const MINUTE_MS = 60000;
+    const SECOND_MS = 1000;
+    const CENTISECOND_MS = 10;
+  
+    let parts = [];
+    let diff = endTime - startTime;
+    if (diff > DAY_MS) {
+      parts.push(Math.trunc(diff / DAY_MS));
+    }
+    if (diff > HOUR_MS) {
+      parts.push(Math.trunc((diff % DAY_MS) / HOUR_MS));
+    }
+    if (diff > MINUTE_MS) {
+      parts.push(Math.trunc((diff % HOUR_MS) / MINUTE_MS));
+    }
+    parts.push(Math.trunc((diff % MINUTE_MS) / SECOND_MS));
+    parts.push(Math.trunc((diff % SECOND_MS) / CENTISECOND_MS));
+  
+    return parts;
+  }
+
 
   React.useEffect(() => {
     addEventListener("keydown", handleKeyDown);
